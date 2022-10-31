@@ -8,8 +8,8 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
     integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous">
   <link href="/fontawesome/css/all.css" rel="stylesheet">
-  <script src="./moment.min.js"></script>
-  <!-- <script src="/jquery-3.6.1.min.js"></script> -->
+  <script src="/moment.min.js"></script>
+  <script src="/jquery.js"></script>
   <link rel="shortcut icon" href="#">
 </head>
 
@@ -230,7 +230,7 @@
       <table class="table table-sortable   table-striped card-body">
         <thead class="thead">
           <tr>
-            <th scope="col" class="no-sort">ID</th>
+            <th scope="col" class="no-sort">No</th>
             <th scope="col">String</th>
             <th scope="col">Integer</th>
             <th scope="col">Float</th>
@@ -261,18 +261,27 @@
       sortBy: 'strings',
       sortMode: 'asc'
     }
+
+    $(document).ready(function () {
+      readData()
+
+      $("#form-users").submit(function (event) {
+        event.preventDefault()
+        saveData()
+      })
+    })
     const readData = () => {
-      fetch(`http://localhost:3001/?${new URLSearchParams(params).toString()}`)
-        .then((response) => {
-          return response.json()
-        })
-        .then((res) => {
-          const { data, pages } = res
-          params = { ...params, pages }
-          let html = ""
-          let offset = (parseInt(params.page) - 1) * params.pages
-          data.forEach((item, index) => {
-            html += `
+      $.ajax({
+        method: "GET",
+        url: "http://localhost:3001/?${new URLSearchParams(params).toString()}",
+      }).done(function (res) {
+        const { data, pages } = res
+        console.log(res)
+        params = { ...params, pages }
+        let html = ""
+        let offset = (parseInt(params.page) - 1) * params.pages
+        data.forEach((item, index) => {
+          html += `
             <tr>
               <td>${index + 1 + offset}</td>
               <td>${item.strings}</td>
@@ -286,52 +295,53 @@
               </td>
           </tr>
             `
-          });
-          document.getElementById('table-users').innerHTML = html
-          pagination()
-        })
-        .catch((err) => {
-          alert('err tu')
-        })
+        });
+        $('#table-users').html(html)
+        pagination()
+      }).fail(function (err) {
+        alert('err tu')
+      })
     }
-    // add
-    const saveData = () => {
-      const string = document.getElementById('string').value
-      const integer = document.getElementById('integer').value
-      const float = document.getElementById('float').value
-      const date = document.getElementById('date').value
-      const boolean = document.getElementById('boolean').value
 
+    // save Data
+    const saveData = () => {
+      const string = $('#string').val()
+      const integer = $('#integer').val()
+      const float = $('#float').val()
+      const date = $('#date').val()
+      const boolean = $('#boolean').val()
+      console.log(saveData)
+
+      //add & edit
       if (idEdit == null) {
-        fetch('http://localhost:3001/', {
-          method: 'POST', // or 'PUT'
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ string, integer, float, date, boolean }),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            readData()
-          })
-      } else {
-        fetch(`http://localhost:3001/${idEdit}`, {
-          method: 'PUT',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({ string, integer, float, date, boolean })
-        }).then((response) => response.json()).then((data) => {
+        $.ajax({
+          method: "POST",
+          url: "http://localhost:3001/",
+          dataType: "json",
+          data: { string, integer, float, date, boolean }
+        }).done(function (data) {
           readData()
+        }).fail(function (err) {
+          alert('Tambah gagal')
         })
+        $('#string').val('')
+        $('#integer').val('')
+        $('#float').val('')
+        $('#date').val('')
+        $('#boolean').val('')
+        return false
+        console.log(saveData)
+      } else {
+        $.ajax({
+          method: "PUT",
+          url: "http://localhost:3001/${idEdit}",
+          dataType: "json",
+          data: { string, integer, float, date, boolean }
+        }).done(function (data) {
+          readData()
+        }).fail('edit gagal')
         idEdit = null;
       }
-      document.getElementById('string').value = ''
-      document.getElementById('integer').value = ''
-      document.getElementById('float').value = ''
-      document.getElementById('date').value = ''
-      document.getElementById('boolean').value = ''
-      return false
     }
     // delete
     const removeData = (id) => {
@@ -344,14 +354,14 @@
         readData()
       })
     }
-    const editData = (breads) => {
 
+    const editData = (breads) => {
       idEdit = breads._id
-      document.getElementById('string').value = breads.strings
-      document.getElementById('integer').value = breads.integers
-      document.getElementById('float').value = breads.floats
-      document.getElementById('date').value = moment(breads.dates).format('YYYY-MM-DD')
-      document.getElementById('boolean').value = breads.booleans
+      $('#string').value = breads.strings
+      $('#integer').value = breads.integers
+      $('#float').value = breads.floats
+      $('#date').value = moment(breads.dates).format('YYYY-MM-DD')
+      $('#boolean').value = breads.booleans
 
     }
     const pagination = () => {
@@ -385,10 +395,7 @@
       readData()
     }
 
-    document.getElementById("form-users").addEventListener("submit", function (event) {
-      event.preventDefault()
-      saveData()
-    });
+
 
 
     document.getElementById('form-search').addEventListener('submit', (event) => {
@@ -443,7 +450,6 @@
       });
     });
 
-    readData()
   </script>
 </body>
 

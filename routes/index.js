@@ -11,7 +11,7 @@ module.exports = function (db) {
 
       const page = req.query.page || 1;
       const limit = 3;
-      const offset = limit == 'all' ? 0 : (page - 1) * limit;
+      const offset = (page - 1) * limit;
       const wheres = {};
       const sortMongo = {};
 
