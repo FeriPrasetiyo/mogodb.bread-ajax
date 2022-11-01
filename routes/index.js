@@ -58,6 +58,7 @@ module.exports = function (db) {
         data,
         pages,
         limit,
+        page,
         offset
       })
     } catch (err) {
@@ -83,11 +84,10 @@ module.exports = function (db) {
 
   router.delete("/:id", async (req, res) => {
     try {
-      const data = await db
-        .collection("users")
-        .deleteOne({ '_id': ObjectId(`${req.params.id}`) });
+      const data = await db.collection("users").deleteOne({ '_id': ObjectId(`${req.params.id}`) });
       res.json({ success: true, data });
     } catch (err) {
+      console.log(err)
       res.json(err, { success: false });
     }
   });

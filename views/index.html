@@ -20,10 +20,12 @@
         <h1>Bread</h1>
       </div>
       <input type="hidden" name="halaman" value="1">
+
       <div class="card-body">
         <div class="row">
           <div class="col-sm-6">
             <form action="/" method="post" id="form-users">
+              <input type="hidden" id="id" value="">
               <div class="card">
                 <div class="card-body">
                   <!-- String -->
@@ -35,7 +37,7 @@
                     <div class="col-10">
                       <div class="col-auto">
                         <label for="string" class="visually-hidden">string</label>
-                        <input type="text" class="form-control" id="string" name="string" placeholder="string">
+                        <input type="text" class="form-control" id="string" placeholder="string">
                       </div>
                     </div>
                   </div>
@@ -49,7 +51,7 @@
                     <div class="col-10">
                       <div class="col-auto">
                         <label for="integer" class="visually-hidden">interger</label>
-                        <input type="number" class="form-control" id="integer" name="integer" placeholder="integer">
+                        <input type="number" class="form-control" id="integer" placeholder="integer">
                       </div>
                     </div>
                   </div>
@@ -63,8 +65,7 @@
                     <div class="col-10">
                       <div class="col-auto">
                         <label for="float" class="visually-hidden">float</label>
-                        <input type="number" class="form-control" id="float" name="float" placeholder="float"
-                          step="0.005">
+                        <input type="number" class="form-control" id="float" placeholder="float" step="0.005">
                       </div>
                     </div>
                   </div>
@@ -78,7 +79,7 @@
                     <div class="col-10">
                       <div class="col-auto">
                         <label for="date" class="visually-hidden">date</label>
-                        <input type="date" class="form-control" id="date" name="date" placeholder="date">
+                        <input type="date" class="form-control" id="date" placeholder="date">
                       </div>
                     </div>
                   </div>
@@ -90,8 +91,8 @@
                       <input type="text" readonly class="form-control-plaintext" value="Boolean">
                     </div>
                     <div class="col-10">
-                      <select class="form-select" aria-label="Default select example" id="boolean" name="boolean">
-                        <option selected disabled>Pilih</option>
+                      <select class="form-select" aria-label="Default select example" id="boolean">
+                        <option value="">Pilih</option>
                         <option value=true>True</option>
                         <option value=false>false</option>
                       </select>
@@ -171,7 +172,7 @@
               <div class="row">
                 <div class="col-2">
                   <div class="form-check">
-                    <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+                    <input class="form-check-input" type="checkbox" id="flexCheckDefault">
                     <label class="form-check-label" for="flexCheckDefault">
                       Date
                     </label>
@@ -180,14 +181,13 @@
                 <div class="col-5">
                   <div class="col-auto">
                     <label for="date" class="visually-hidden">startDate</label>
-                    <input type="date" class="form-control" id="searchStartDate" name="searchStartDate"
-                      placeholder="date">
+                    <input type="date" class="form-control" id="searchStartDate" placeholder="date">
                   </div>
                 </div>
                 <div class="col-5">
                   <div class="col-auto">
                     <label for="date" class="visually-hidden">endDate</label>
-                    <input type="date" class="form-control" id="searchEndDate" name="searchEndDate" placeholder="date">
+                    <input type="date" class="form-control" id="searchEndDate" placeholder="date">
                   </div>
                 </div>
               </div>
@@ -227,7 +227,7 @@
   <div class="card">
     <h5 class="card-header">Table</h5>
     <div class="card-body">
-      <table class="table table-sortable   table-striped card-body">
+      <table class="table table-sortable table-striped card-body">
         <thead class="thead">
           <tr>
             <th scope="col" class="no-sort">No</th>
@@ -255,9 +255,8 @@
     </div>
   </div>
   <script>
-    let idEdit = null;
+    var idEdit = null
     var params = {
-      page: 1,
       sortBy: 'strings',
       sortMode: 'asc'
     }
@@ -269,17 +268,37 @@
         event.preventDefault()
         saveData()
       })
+
+      $('#table-users').on('click', '.btn-delete', function (event) {
+        const id = $(this).attr('dataid')
+        removeData(id)
+      })
+
+      $('#table-users').on('click', '.btn-edit', function (event) {
+        const data = $(this).attr('dataid')
+        editData(data)
+      })
+
+      $("#form-search").submit(function (event) {
+        event.preventDefault()
+        search()
+      })
+
+      $('#form-search').on('click', '.btn-reset', function (event) {
+        resetData()
+      })
+
     })
+
+
     const readData = () => {
       $.ajax({
         method: "GET",
-        url: "http://localhost:3001/?${new URLSearchParams(params).toString()}",
+        url: `http://localhost:3001/?${new URLSearchParams(params).toString()}`,
       }).done(function (res) {
-        const { data, pages } = res
-        console.log(res)
-        params = { ...params, pages }
+        const { data, pages, page, offset } = res
+        params = { ...params, pages, page }
         let html = ""
-        let offset = (parseInt(params.page) - 1) * params.pages
         data.forEach((item, index) => {
           html += `
             <tr>
@@ -288,10 +307,10 @@
               <td>${item.integers}</td>
               <td>${item.floats}</td>
               <td>${moment(item.dates).format('YYYY-MM-DD')}</td>
-              <td>${item.booleans}</td>
+              <td>${JSON.parse(item.booleans)}</td>
               <td>
-                <button type="button" class='btn btn-primary' onclick='editData(${JSON.stringify(item)})'><i class="fa-solid fa-pen-to-square"></i></button>
-                <button type="button" class='btn btn-danger' onclick="removeData('${item._id}')"><i class="fa-solid fa-trash"></i></button>
+                <button type="button" class='btn btn-primary btn-edit' dataid='${JSON.stringify(item)}'><i class="fa-solid fa-pen-to-square"></i></button>
+                <button type="button" class='btn btn-danger btn-delete'dataid='${item._id}'><i class="fa-solid fa-trash"></i></button>
               </td>
           </tr>
             `
@@ -305,14 +324,13 @@
 
     // save Data
     const saveData = () => {
+      const id = $('#id').val()
       const string = $('#string').val()
       const integer = $('#integer').val()
       const float = $('#float').val()
       const date = $('#date').val()
       const boolean = $('#boolean').val()
-      console.log(saveData)
 
-      //add & edit
       if (idEdit == null) {
         $.ajax({
           method: "POST",
@@ -324,46 +342,51 @@
         }).fail(function (err) {
           alert('Tambah gagal')
         })
-        $('#string').val('')
-        $('#integer').val('')
-        $('#float').val('')
-        $('#date').val('')
-        $('#boolean').val('')
-        return false
-        console.log(saveData)
       } else {
         $.ajax({
           method: "PUT",
-          url: "http://localhost:3001/${idEdit}",
+          url: `http://localhost:3001/${idEdit}`,
           dataType: "json",
           data: { string, integer, float, date, boolean }
         }).done(function (data) {
           readData()
-        }).fail('edit gagal')
-        idEdit = null;
+        }).fail(function (err) {
+          alert('edit gagal')
+        })
+        idEdit = null
       }
+      $('#id').val('')
+      $('#string').val('')
+      $('#integer').val('')
+      $('#float').val('')
+      $('#date').val('')
+      $('#boolean').val('')
     }
+
     // delete
     const removeData = (id) => {
-      fetch(`http://localhost:3001/${id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      }).then((response) => response.json()).then((data) => {
+      $.ajax({
+        method: "DELETE",
+        url: `http://localhost:3001/${id}`,
+        dataType: "json",
+      }).done(function (data) {
         readData()
-      })
+      }).fail('remove gagal')
     }
 
-    const editData = (breads) => {
-      idEdit = breads._id
-      $('#string').value = breads.strings
-      $('#integer').value = breads.integers
-      $('#float').value = breads.floats
-      $('#date').value = moment(breads.dates).format('YYYY-MM-DD')
-      $('#boolean').value = breads.booleans
 
+    const editData = (data) => {
+      console.log(data)
+      let obj = JSON.parse(data)
+      idEdit = obj._id
+      console.log(obj)
+      $('#string').val(obj.strings)
+      $('#integer').val(obj.integers)
+      $('#float').val(obj.floats)
+      $('#date').val(moment(obj.dates).format('YYYY-MM-DD'))
+      $('#boolean').val(obj.booleans)
     }
+
     const pagination = () => {
       let pagination = `<ul class="pagination">
                                <li class="page-item${params.page == 1 ? ' disabled' : ''}">
@@ -390,27 +413,24 @@
       return false
     }
 
-    function resetData() {
-      document.getElementById('form-search').reset()
+    const resetData = () => {
+      $("#form-search").trigger('reset')
+      params.page = 1
       readData()
     }
 
-
-
-
-    document.getElementById('form-search').addEventListener('submit', (event) => {
+    const search = () => {
       event.preventDefault()
       const page = 1
-      const string = document.getElementById('searchString').value
-      const integer = document.getElementById('searchInteger').value
-      const float = document.getElementById('searchFloat').value
-      const startDate = document.getElementById('searchStartDate').value
-      const endDate = document.getElementById('searchEndDate').value
-      const boolean = document.getElementById('searchBoolean').value
+      const string = $('#searchString').val()
+      const integer = $('#searchInteger').val()
+      const float = $('#searchFloat').val()
+      const startDate = $('#searchStartDate').val()
+      const endDate = $('#searchEndDate').val()
+      const boolean = $('#searchBoolean').val()
       params = { ...params, string, integer, float, startDate, endDate, boolean, page }
-      console.log(params)
       readData()
-    })
+    }
 
 
     function sortTableByColumn(table, column, asc = true) {
