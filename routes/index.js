@@ -3,16 +3,17 @@ var express = require("express");
 var router = express.Router();
 var moment = require("moment");
 var { ObjectId } = require('mongodb');
+const { json } = require("stream/consumers");
 
 /* GET home page. */
 module.exports = function (db) {
   router.get("/", async function (req, res) {
     try {
-
       const page = req.query.page || 1;
       const limit = 3;
       const offset = (page - 1) * limit;
       const wheres = {};
+
       const sortMongo = {};
 
       let sortBy = req.query.sortBy || "strings"
@@ -35,18 +36,18 @@ module.exports = function (db) {
 
       if (req.query.startDate && req.query.endDate) {
         wheres["dates"] = {
-          $gte: new Date(`${req.query.startDate}`),
-          $lte: new Date(`${req.query.endDate}`)
+          $gte: new Date(req.query.startDate),
+          $lte: new Date(req.query.endDate)
         }
       } else if (req.query.startDate) {
-        wheres["dates"] = { $gte: new Date(`${req.query.startDate}`) }
+        wheres["dates"] = { $gte: new Date(req.query.startDate) }
       } else if (req.query.endDate) {
-        wheres["dates"] = { $lte: new Date(`${req.query.endDate}`) }
+        wheres["dates"] = { $lte: new Date(req.query.endDate) }
       }
 
 
       if (req.query.boolean) {
-        wheres["booleans"] = (req.query.boolean)
+        wheres["booleans"] = JSON.parse(req.query.boolean)
       }
 
       const result = await db.collection("users").find(wheres).toArray()

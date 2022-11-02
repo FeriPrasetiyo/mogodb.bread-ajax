@@ -376,15 +376,13 @@
 
 
     const editData = (data) => {
-      console.log(data)
       let obj = JSON.parse(data)
       idEdit = obj._id
-      console.log(obj)
       $('#string').val(obj.strings)
       $('#integer').val(obj.integers)
       $('#float').val(obj.floats)
       $('#date').val(moment(obj.dates).format('YYYY-MM-DD'))
-      $('#boolean').val(obj.booleans)
+      $(`#boolean option[value=${obj.booleans}]`).prop('selected', true)
     }
 
     const pagination = () => {
