@@ -73,7 +73,7 @@ module.exports = function (db) {
         strings: `${req.body.string}`,
         integers: parseInt(req.body.integer),
         floats: parseFloat(req.body.float),
-        dates: new Date(`${req.body.date}`),
+        dates: new Date(req.body.date),
         booleans: JSON.parse(req.body.boolean),
       };
       const data = await db.collection("users").insertOne(myobj);
@@ -99,7 +99,7 @@ module.exports = function (db) {
         strings: req.body.string,
         integers: parseInt(req.body.integer),
         floats: parseFloat(req.body.float),
-        dates: req.body.date,
+        dates: new Date(req.body.date),
         booleans: JSON.parse(req.body.boolean),
       };
 
